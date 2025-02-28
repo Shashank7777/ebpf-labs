@@ -1,4 +1,4 @@
-# Extended Berkeley Packet Filter eBPF
+# Extended Berkeley Packet Filter (eBPF)
 
 ## Introduction
 
@@ -17,15 +17,15 @@ eBPF programs can be attached to various events in the Linux kernel, including:
 
 ## eBPF Helper Functions
 
-bpf_trace_printk()  
+### bpf_trace_printk()
 Writes a message to the kernel trace buffer located at `/sys/kernel/debug/tracing/trace_pipe`.
 
-b.trace_print()  
+### b.trace_print()
 Reads messages from the kernel trace buffer and prints them.
 
 ## Attaching eBPF Programs
 
-Using b.attach_kprobe()  
+### Using b.attach_kprobe()
 Attaches an eBPF program dynamically to a kernel function.
 
 Example:
@@ -47,16 +47,17 @@ Default declaration:
 
 BPF_HASH(counter_table, u64, u64, 10240);
 
-Key type is u64, value type is u64, and it can store a maximum of 10240 elements.
-Extracting Process Information
+    Key type: u64
+    Value type: u64
+    Maximum elements: 10240
 
-Get UID of a Running Process:
+Extracting Process Information
+Get UID of a Running Process
 
 bpf_get_current_uid_gid() & 0xFFFFFFFF;
 
 Extracts the lower 32 bits, which contain the UID.
-
-Get PID of a Running Process:
+Get PID of a Running Process
 
 bpf_get_current_pid_tgid() >> 32;
 
@@ -76,19 +77,19 @@ counter_table.update(&key, &value);
 
 Looks up a value in counter_table using key and updates the value associated with key.
 Perf and Ring Buffer Maps
-
 Ring Buffers
-Circular memory buffers with separate read and write pointers. Used for efficient data streaming between eBPF running in the kernel and user-space applications.
-Passing Data from Kernel to User-Space
 
+Circular memory buffers with separate read and write pointers.
+Used for efficient data streaming between eBPF running in the kernel and user-space applications.
+Passing Data from Kernel to User-Space
 Using BPF_PERF_OUTPUT
 
 BPF_PERF_OUTPUT(output);
 
 Used to send messages from the kernel to user-space.
 Key eBPF Helper Functions
-
 bpf_get_current_comm()
+
 Retrieves the name of the currently executing process.
 
 Example:
@@ -99,22 +100,28 @@ Function Signature:
 
 int bpf_get_current_comm(char *buf, int size);
 
-buf is the pointer to the destination buffer and size is the buffer size.
+    buf is the pointer to the destination buffer.
+    size is the buffer size.
 
 bpf_probe_read_kernel()
+
 Reads data from kernel memory.
 
 Example:
 
 bpf_probe_read_kernel(&data.msg, sizeof(data.msg), src_pointer);
 
-src_pointer is the kernel memory location and data.msg is the destination buffer.
+    src_pointer is the kernel memory location.
+    data.msg is the destination buffer.
 
 output.perf_submit()
+
 Sends data from eBPF to user-space.
 
 Example:
 
 output.perf_submit(ctx, &data, sizeof(data));
 
-ctx is the execution context, data is the struct holding event data, and sizeof(data) is the size of the struct.
+    ctx is the execution context.
+    data is the struct holding event data.
+    sizeof(data) is the size of the struct.
