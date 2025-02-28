@@ -31,36 +31,37 @@ Attaches an eBPF program dynamically to a kernel function.
 Example:
 ```c
 b.attach_kprobe(event="sys_execve", fn_name="hello")
-
+```
 This hooks the function hello() to the execve system call. If multiple eBPF programs write to trace_pipe, logs can become difficult to read.
+
 BPF Maps - Data Structures in eBPF
 
 BPF Maps allow kernel and user-space programs to exchange data.
 
 Example:
-
+```c
 BPF_HASH(counter_table);
-
+```
 Creates a hash table named counter_table.
 
 Default declaration:
-
+```c
 BPF_HASH(counter_table, u64, u64, 10240);
 
     Key type: u64
     Value type: u64
     Maximum elements: 10240
-
+```
 Extracting Process Information
 Get UID of a Running Process
-
+```c
 bpf_get_current_uid_gid() & 0xFFFFFFFF;
-
+```
 Extracts the lower 32 bits, which contain the UID.
 Get PID of a Running Process
-
+```c
 bpf_get_current_pid_tgid() >> 32;
-
+```
 Extracts the upper 32 bits, which contain the PID.
 Hash Tables and Performance
 
@@ -71,10 +72,10 @@ They are implemented as:
     Hash functions which allow constant time lookup
 
 Example:
-
+```c
 counter_table.lookup(&key);
 counter_table.update(&key, &value);
-
+```
 Looks up a value in counter_table using key and updates the value associated with key.
 Perf and Ring Buffer Maps
 Ring Buffers
@@ -83,45 +84,46 @@ Circular memory buffers with separate read and write pointers.
 Used for efficient data streaming between eBPF running in the kernel and user-space applications.
 Passing Data from Kernel to User-Space
 Using BPF_PERF_OUTPUT
-
+```c
 BPF_PERF_OUTPUT(output);
-
+```
 Used to send messages from the kernel to user-space.
 Key eBPF Helper Functions
+```c
 bpf_get_current_comm()
-
+```
 Retrieves the name of the currently executing process.
 
 Example:
-
+```c
 bpf_get_current_comm(data.command, sizeof(data.command));
-
+```
 Function Signature:
-
+```c
 int bpf_get_current_comm(char *buf, int size);
-
+```
     buf is the pointer to the destination buffer.
     size is the buffer size.
-
+```c
 bpf_probe_read_kernel()
-
+```
 Reads data from kernel memory.
 
 Example:
-
+```c
 bpf_probe_read_kernel(&data.msg, sizeof(data.msg), src_pointer);
-
+```
     src_pointer is the kernel memory location.
     data.msg is the destination buffer.
-
+```c
 output.perf_submit()
-
+```
 Sends data from eBPF to user-space.
 
 Example:
-
+```c
 output.perf_submit(ctx, &data, sizeof(data));
-
+```
     ctx is the execution context.
     data is the struct holding event data.
     sizeof(data) is the size of the struct.
