@@ -1,6 +1,6 @@
 # eBPF Examples and Explanation
 
-This repository contains three Python scripts that demonstrate the use of eBPF (Extended Berkeley Packet Filter) for tracing system calls and collecting data in real-time. Below is a detailed explanation of each script and the fundamental concepts behind them.
+This repository contains Python scripts that demonstrate the use of eBPF (Extended Berkeley Packet Filter). Below is a detailed explanation of each script and the fundamental concepts behind them.
 
 ---
 
@@ -97,7 +97,7 @@ eBPF programs can be attached to various kernel events, such as:
 ---
 
 ## References
-
+- [Learning eBPF] by Liz Rice.
 - [eBPF Documentation](https://ebpf.io/)
 - [BCC (BPF Compiler Collection)](https://github.com/iovisor/bcc)
 - [Linux Kernel Tracing](https://www.kernel.org/doc/html/latest/trace/index.html)
