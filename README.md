@@ -1,176 +1,86 @@
-# Extended Berkeley Packet Filter (eBPF)
+###eBPF Examples and Explanation
 
-## Introduction
+This repository contains three Python scripts that demonstrate the use of eBPF (Extended Berkeley Packet Filter) for tracing system calls and collecting data in real-time. Below is a detailed explanation of each script and the fundamental concepts behind them.
+###1. hello.py
+###Description:
 
-eBPF (Extended Berkeley Packet Filter) allows programs to be attached to different kernel events and execute efficiently in the kernel space. eBPF is widely used for tracing, networking, security, and performance monitoring.
+This script attaches an eBPF program to the execve system call and prints "Hello World!" to the kernel trace buffer whenever execve is executed.
+###Key Concepts:
 
-## Triggering eBPF Programs
+    eBPF Program: A small program written in C that runs in the kernel. In this case, it prints a message using bpf_trace_printk().
 
-eBPF programs can be attached to various events in the Linux kernel, including:
+    Kprobes: Kernel probes that allow attaching eBPF programs to kernel functions, such as system calls.
 
-- kprobes - Hooks into kernel functions
-- uprobes - Hooks into user-space functions
-- Tracepoints - Generic kernel trace events
-- Network Packets - Used in filtering and monitoring
-- Linux Security Module (LSM) - Security-related hooks
-- Perf Events - Performance monitoring events
+    Trace Buffer: The kernel's tracing buffer (/sys/kernel/debug/tracing/trace_pipe) where messages from bpf_trace_printk() are stored.
 
-## eBPF Helper Functions
+###Code Explanation:
 
-### bpf_trace_printk()
-Writes a message to the kernel trace buffer located at /sys/kernel/debug/tracing/trace_pipe.
+    eBPF Program:
 
-### b.trace_print()
-Reads messages from the kernel trace buffer and prints them.
+        Defines a function hello() that prints "Hello World!" using bpf_trace_printk().
 
-## Attaching eBPF Programs
+    Python Script:
 
-### Using b.attach_kprobe()
-Attaches an eBPF program dynamically to a kernel function.
+        Loads the eBPF program into the kernel using BPF(text=program).
 
-Example:
-b.attach_kprobe(event="sys_execve", fn_name="hello")
+        Attaches the hello() function to the execve system call using b.attach_kprobe().
 
-This hooks the function hello() to the execve system call. If multiple eBPF programs write to trace_pipe, logs can become difficult to read.
+        Reads and prints messages from the trace buffer using b.trace_print().
 
-## BPF Maps - Data Structures in eBPF
+###2. hello-map.py
+###Description:
 
-BPF Maps allow kernel and user-space programs to exchange data.
+This script extends the functionality of hello.py by using a BPF hash map to count how many times the execve system call is executed per user ID (UID).
+###Key Concepts:
 
-Example:
-BPF_HASH(counter_table);
+    BPF Maps: Data structures that allow sharing data between the eBPF program and user-space. In this case, a hash map (BPF_HASH) is used to store execution counts per UID.
 
-Creates a hash table named counter_table.
+    UID Tracking: The eBPF program retrieves the UID of the process executing execve using bpf_get_current_uid_gid().
 
-Default declaration:
-BPF_HASH(counter_table, u64, u64, 10240);
+    Periodic Output: The Python script periodically prints the contents of the BPF hash map.
 
-    Key type: u64
-    Value type: u64
-    Maximum elements: 10240
+###Code Explanation:
 
-## Extracting Process Information
+    eBPF Program:
 
-### Get UID of a Running Process
-bpf_get_current_uid_gid() & 0xFFFFFFFF;
+        Declares a hash map counter_table to store execution counts per UID.
 
-Extracts the lower 32 bits, which contain the UID.
+        Retrieves the UID of the current process and increments its count in the hash map.
 
-### Get PID of a Running Process
-bpf_get_current_pid_tgid() >> 32;
+    Python Script:
 
-Extracts the upper 32 bits, which contain the PID.
+        Loads the eBPF program and attaches it to the execve system call.
 
-## Hash Tables and Performance
+        Periodically iterates through the hash map and prints the execution counts for each UID.
 
-Hash tables provide constant-time lookup. They are implemented as:
+###3. hello-buffer.py
+###Description:
 
-- Linked lists which have linear time complexity
-- Hash functions which allow constant time lookup
+This script demonstrates how to use a perf buffer to send structured data (e.g., process ID, UID, command name) from the eBPF program to user-space.
+###Key Concepts:
 
-Example:
-counter_table.lookup(&key);
-counter_table.update(&key, &value);
+    Perf Buffer: A high-performance ring buffer that allows efficient data transfer between the kernel and user-space.
 
-Looks up a value in counter_table using key and updates the value associated with key.
+    Structured Data: The eBPF program defines a data_t struct to organize the data (PID, UID, command name, and a message).
 
-## Perf and Ring Buffer Maps
+    Callback Function: A Python function (print_event) processes and prints the data received from the perf buffer.
 
-### Ring Buffers
+###Code Explanation:
 
-Circular memory buffers with separate read and write pointers. Used for efficient data streaming between eBPF running in the kernel and user-space applications.
+    eBPF Program:
 
-## Passing Data from Kernel to User-Space
+        Declares a perf buffer output for sending data to user-space.
 
-### Using BPF_PERF_OUTPUT
-BPF_PERF_OUTPUT(output);
+        Defines a data_t struct to hold process execution details.
 
-Used to send messages from the kernel to user-space.
+        Retrieves the PID, UID, and command name of the process executing execve.
 
-## Key eBPF Helper Functions
+        Submits the data to the perf buffer using output.perf_submit().
 
-### bpf_get_current_comm()
-Retrieves the name of the currently executing process.
+    Python Script:
 
-Example:
-bpf_get_current_comm(data.command, sizeof(data.command));
+        Loads the eBPF program and attaches it to the execve system call.
 
-Function Signature:
-int bpf_get_current_comm(char *buf, int size);
+        Defines a callback function print_event to process and print data received from the perf buffer.
 
-    buf is the pointer to the destination buffer.
-    size is the buffer size.
-
-### bpf_probe_read_kernel()
-Reads data from kernel memory.
-
-Example:
-bpf_probe_read_kernel(&data.msg, sizeof(data.msg), src_pointer);
-
-    src_pointer is the kernel memory location.
-    data.msg is the destination buffer.
-
-### output.perf_submit()
-Sends data from eBPF to user-space.
-
-Example:
-output.perf_submit(ctx, &data, sizeof(data));
-
-    ctx is the execution context.
-    data is the struct holding event data.
-    sizeof(data) is the size of the struct.
-
-## Complete Example: Attaching eBPF to sys_execve
-
-Here’s a complete example of attaching an eBPF program to the sys_execve system call and printing a message when it is triggered:
-
-### eBPF Program (hello.c)
-#include <linux/bpf.h>
-#include <bpf/bpf_helpers.h>
-
-SEC("kprobe/sys_execve")
-int hello(void *ctx) {
-    char msg[] = "Hello, eBPF! sys_execve was called.\n";
-    bpf_trace_printk(msg, sizeof(msg));
-    return 0;
-}
-
-char _license[] SEC("license") = "GPL";
-
-### Python Script to Load and Attach eBPF Program
-from bcc import BPF
-
-# Load the eBPF program
-b = BPF(src_file="hello.c")
-
-# Attach the eBPF program to the sys_execve system call
-b.attach_kprobe(event="sys_execve", fn_name="hello")
-
-# Read and print the trace output
-print("Tracing sys_execve... Hit Ctrl-C to end.")
-while True:
-    try:
-        (task, pid, cpu, flags, ts, msg) = b.trace_fields()
-        print(f"{ts}: {msg.decode('utf-8')}")
-    except KeyboardInterrupt:
-        exit()
-
-### Explanation of the Code
-
-1. eBPF Program (hello.c):
-   - The SEC("kprobe/sys_execve") macro defines a section in the eBPF program that hooks into the sys_execve system call.
-   - The hello() function is triggered whenever sys_execve is called.
-   - bpf_trace_printk() writes a message to the kernel trace buffer.
-
-2. Python Script:
-   - The BPF class from the bcc library is used to load the eBPF program.
-   - b.attach_kprobe() attaches the eBPF program to the sys_execve system call.
-   - b.trace_fields() reads the trace output from the kernel buffer and prints it.
-
----
-
-## References
-
-- eBPF Documentation: https://ebpf.io/
-- bcc Tools: https://github.com/iovisor/bcc
-- Linux Kernel Tracing: https://www.kernel.org/doc/html/latest/trace/index.html
+        Continuously polls the perf buffer for new events using b.perf_buffer_poll()
