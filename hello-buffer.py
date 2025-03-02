@@ -32,7 +32,7 @@ int hello(void *ctx) {
     bpf_get_current_comm(&data.command, sizeof(data.command));
 
     // Corrected: Use __builtin_memcpy() to safely copy stack memory
-    __builtin_memcpy(data.message, message, sizeof(data.message));
+    bpf_probe_read_kernel(&data.message, sizeof(data.message), message);
 
     // Submit the event to user-space via the perf buffer
     output.perf_submit(ctx, &data, sizeof(data));
