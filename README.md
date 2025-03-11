@@ -1,6 +1,6 @@
 
-### Learning eBPF Repository
-This repository consists of every program and exercise from the book "Learning eBPF" with some modifications as well.
+### Learning eBPF 
+This repository consists of every program from the book "Learning eBPF" with some modifications as well.
 The programs in this collection follow the content of the book while implementing various eBPF concepts and techniques. In some cases, I've modified the original examples to explore alternative approaches or to add additional functionality.
 
 ### Contents
