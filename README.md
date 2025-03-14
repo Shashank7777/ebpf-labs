@@ -31,5 +31,5 @@ eBPF programs are typically written in C and compiled to eBPF bytecode using LLV
 
 ### Purpose
 - This repository serves as a learning resource and reference implementation for anyone studying eBPF through the "Learning eBPF" book. The modifications showcase alternative techniques and provide additional insights beyond the original text.
-- Feel free to explore, use, and modify these examples for your own learning journey with eBPF.
+- Feel free to explore, use, and modify these examples for your own learning journey with eBPF
 
